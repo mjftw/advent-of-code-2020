@@ -2,12 +2,20 @@ defmodule AdventOfCode.Day2 do
   @input_file Path.join(:code.priv_dir(:advent_of_code), "day2_input")
 
   def run_part1() do
-    @input_file
+    count_valid_passwords(@input_file, &password_valid_rule1?/1)
+  end
+
+  def run_part2() do
+    count_valid_passwords(@input_file, &password_valid_rule2?/1)
+  end
+
+  defp count_valid_passwords(input_file, strategy) do
+    input_file
     |> read_input()
     |> Enum.map(fn input ->
       input
       |> parse_input()
-      |> password_valid?()
+      |> strategy.()
     end)
     |> Enum.count(& &1)
   end
@@ -44,8 +52,8 @@ defmodule AdventOfCode.Day2 do
     }
   end
 
-  @spec password_valid?({pos_integer, pos_integer, char, String.t()}) :: boolean
-  defp password_valid?({min, max, char, password}) do
+  @spec password_valid_rule1?({pos_integer, pos_integer, char, String.t()}) :: boolean
+  defp password_valid_rule1?({min, max, char, password}) do
     password
     |> String.graphemes()
     |> Enum.count(&(&1 == char))
@@ -54,5 +62,18 @@ defmodule AdventOfCode.Day2 do
 
   defp num_in_range(num, min, max) do
     min <= num and num <= max
+  end
+
+  defp password_valid_rule2?({min, max, char, password}) do
+    password
+    |> String.graphemes()
+    |> count_matching_at_indices(char, [min - 1, max - 1])
+    |> (&(&1 == 1)).()
+  end
+
+  defp count_matching_at_indices(seq, match, indices) do
+    indices
+    |> Enum.map(fn idx -> Enum.at(seq, idx) == match end)
+    |> Enum.count(& &1)
   end
 end
